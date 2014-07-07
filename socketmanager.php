@@ -4,14 +4,96 @@
  * @author guliuzhong
  *
  */
-if (!class_exists ( 'socket', flase )) {
+if (! class_exists ( 'socket', flase )) {
 	include 'socket.php';
 }
 class socketmanager {
 	private $listensocket = null;
-	public function __construct($port = '10080', $ip = '0.0.0.0') {
-		$this->listensocket = socket::createSocket ( $port, $ip );
+	private $sockets = array ();
+	private $resource = array ();
+	private $handlefunc = null;
+	public function __construct($port = '10080', $ip = '0.0.0.0', $func) {
+		$socket = socket::createSocket ( $port, $ip );
+		$this->listensocket = $socket->socket;
+		$this->addclient ( $socket );
+		$this->handlefunc = is_callable ( $func ) ? $func : null;
 	}
-	public function switchsocket($socket) {
+	public function select() {
+		$readsock = $writesock = $exceptsock = $this->sockets;
+		echo date("H:i:s")."选择".PHP_EOL;
+		if (socket_select ( $readsock, $write, $except, 0, 0 ) == 0) {
+			return true;
+		}
+		echo date("H:i:s")."处理socket".PHP_EOL;
+// 		echo '链接读';
+// 		var_dump ( $readsock );
+// 		echo '链接写';
+// 		var_dump ( $writesock );
+// 		echo '链接异';
+// 		var_dump ( $exceptsock );
+// 		echo '资源';
+// 		var_dump ( $this->resource );
+		// foreach ( $exceptsock as $sock ) {
+		// $key = array_search ( $sock, $this->sockets );
+		// $socket = socket::restore ( $this->resource [$key], $sock );
+		// $this->removeclient ( $socket );
+		// $socket->close ();
+		// }
+		if (in_array ( $this->listensocket, $readsock )) {
+			$key = array_search ( $this->listensocket, $this->sockets );
+			// echo $key;
+			// exit;
+			$socket = socket::restore ( $this->resource [$key], $this->listensocket );
+			$this->addclient ( $socket->acceptsocket () );
+			$key = array_search ( $this->listensocket, $readsock );
+			echo 'accept';
+			unset ( $readsock [$key] );
+		}
+		foreach ( $readsock as $sock ) {
+			$key = array_search ( $sock, $this->sockets );
+			$socket = socket::restore ( $this->resource [$key], $sock );
+			if ($socket->recvbuf () === false) {
+				echo "Free socket".PHP_EOL;
+// 				$key = array_search ( $sock, $readsock );
+// 				$this->removeclient ( $socket );
+// 				$socket->close ();
+// 				unset ( $readsock [$key] );
+			} else {
+				$this->triggerread ( $socket );
+				$this->addclient ( $socket );
+			}
+		}
+		foreach ( $writesock as $sock ) {
+			$key = array_search ( $sock, $this->sockets );
+			$socket = socket::restore ( $this->resource [$key], $sock );
+// 			$socket->outputbuf = date ( 'Y-m-d H:i:s' ) . $socket->outputbuf;
+			$socket->sentbuf ();
+		}
+		return true;
+	}
+	/**
+	 *
+	 * @param socket $socket        	
+	 */
+	public function addclient($socket) {
+		$key = array_search ( $socket->socket, $this->sockets );
+		if ($key === false) {
+			$this->sockets [] = $socket->socket;
+			$key = array_search ( $socket->socket, $this->sockets );
+		}
+		$this->resource [$key] = serialize ( $socket );
+	}
+	/**
+	 *
+	 * @param socket $socket        	
+	 */
+	public function removeclient($socket) {
+		$key = array_search ( $socket, $this->sockets );
+		unset ( $this->sockets [$key], $this->resource [$key] );
+	}
+	public function triggerread($socket) {
+		if ($this->handlefunc) {
+			call_user_func ( $this->handlefunc, $socket );
+		}
 	}
 }

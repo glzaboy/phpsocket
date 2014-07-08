@@ -19,9 +19,16 @@ class socketmanager {
 		$this->handle = $obj;
 	}
 	public function select() {
-		$readsock = $writesock = $exceptsock = $this->sockets;
+		$readsock = $this->sockets;
+		$writesock = $this->sockets;
+		$key = array_search ( $this->listensocket, $writesock );
+		unset ( $writesock [$key] );
+		$exceptsock = $this->sockets;
+		$key = array_search ( $this->listensocket, $exceptsock );
+		unset ( $exceptsock [$key] );
+		
 		echo date ( "H:i:s" ) . "选择" . PHP_EOL;
-		if (socket_select ( $readsock, $write, $except, 0, 0 ) == 0) {
+		if (socket_select ( $readsock, $writesock, $exceptsock, 0, 0 ) == 0) {
 			return true;
 		}
 		echo date ( "H:i:s" ) . "处理socket" . PHP_EOL;
@@ -33,12 +40,13 @@ class socketmanager {
 		// var_dump ( $exceptsock );
 		// echo '资源';
 		// var_dump ( $this->resource );
-		// foreach ( $exceptsock as $sock ) {
-		// $key = array_search ( $sock, $this->sockets );
-		// $socket = socket::restore ( $this->resource [$key], $sock );
-		// $this->removeclient ( $socket );
-		// $socket->close ();
-		// }
+		foreach ( $exceptsock as $sock ) {
+			$key = array_search ( $sock, $this->sockets );
+			$socket = socket::restore ( $this->resource [$key], $sock );
+			$this->removeclient ( $socket );
+			$socket->close ();
+			unset ( $readsock [$key], $writesock [$key] );
+		}
 		if (in_array ( $this->listensocket, $readsock )) {
 			$key = array_search ( $this->listensocket, $this->sockets );
 			// echo $key;
@@ -71,7 +79,7 @@ class socketmanager {
 				$key = array_search ( $sock, $readsock );
 				$this->removeclient ( $socket );
 				$socket->close ();
-				unset ( $readsock [$key] );
+				unset ( $writesock [$key] );
 			} else {
 				$this->triggerwrite ( $socket );
 				$this->addclient ( $socket );

@@ -96,8 +96,12 @@ class socket {
 			$len = socket_recv ( $this->socket, $buf, 4096, 0 );
 			if ($len === 0) {
 				return false;
-			} else {
+			} elseif ($len > 0) {
 				$this->inputbuf .= $buf;
+				return true;
+			} elseif ($len == SOCKET_EINTR) {
+				return true;
+			} elseif ($len == SOCKET_EWOULDBLOCK) {
 				return true;
 			}
 		} else {

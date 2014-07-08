@@ -70,7 +70,6 @@ class socket {
 	 */
 	static public function restore($serializedata, $socket) {
 		$mysocket = unserialize ( $serializedata );
-		var_dump ( $mysocket );
 		$mysocket->socket = $socket;
 		return $mysocket;
 	}
@@ -95,7 +94,7 @@ class socket {
 		if ($this->sockettype == self::SOCK_TYPE_DATA) {
 			$buf = '';
 			$len = socket_recv ( $this->socket, $buf, 4096, 0 );
-			if ($len === false) {
+			if ($len === 0) {
 				return false;
 			} else {
 				$this->inputbuf .= $buf;

@@ -7,6 +7,7 @@ class socket {
 	public $inputbuf = '';
 	public $outputbuf = '';
 	public $sockettype = 0;
+	public $bufend = 0;
 	/**
 	 * 创建socket
 	 *
@@ -44,22 +45,22 @@ class socket {
 	 * @return socket
 	 */
 	public function acceptsocket() {
-		$returnsocket = new socket ();
 		if ($this->sockettype == self::SOCK_TYPE_LISTEN) {
+			$returnsocket = new socket ();
 			$returnsocket->socket = socket_accept ( $this->socket );
 			socket_set_nonblock ( $returnsocket->socket );
 			$returnsocket->sockettype = self::SOCK_TYPE_DATA;
+			return $returnsocket;
 		} else {
-			$returnsocket->socket = null;
-			$returnsocket->sockettype = self::SOCK_TYPE_UNKNOW;
+			return false;
 		}
-		return $returnsocket;
 	}
 	public function __sleep() {
 		return array (
 				'inputbuf',
 				'outputbuf',
-				'sockettype' 
+				'sockettype',
+				'bufend' 
 		);
 	}
 	/**
@@ -82,12 +83,20 @@ class socket {
 	public function sentbuf() {
 		if ($this->sockettype == self::SOCK_TYPE_DATA) {
 			$datalen = strlen ( $this->outputbuf );
-			$len = socket_send ( $this->socket, $this->outputbuf, $datalen, 0 );
+			$len = socket_send ( $this->socket, $this->outputbuf, 40960, 0 );
 			if ($len == $datalen) {
 				$this->outputbuf = '';
-			} else {
-				$this->outputbuf = substr ( $this->outputbuf, $len - 1 );
+				if ($this->bufend == 1) {
+					return false;
+				}
+			} elseif ($len == 0) {
+				return false;
+			} elseif($len>0) {
+				$this->outputbuf = substr ( $this->outputbuf, $len  );
+				return true;
 			}
+		}else{
+			return true;
 		}
 	}
 	public function recvbuf() {

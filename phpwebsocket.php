@@ -2,6 +2,7 @@
 <?php
 date_default_timezone_set ( "Asia/Chongqing" );
 include 'socketmanager.php';
+include 'mime.php';
 class http {
 	/**
 	 *
@@ -23,14 +24,13 @@ class http {
 			return ;
 		}
 		$header=$this->parseHeader( $socket->readbuf ( 1 ));
-		echo __DIR__.$header['path'];
 		if($socket->bufend==0){
 			$buf=array();
 			$buf[]="HTTP/1.1 200 OK";
 			$buf[]="Server:phpSOcket";
 			$buf[]="content-length:".filesize(__DIR__.$header['path']);
-			$buf[] = "Accept-Ranges: bytes";
-			$buf[] = "content-type:audio/mpeg\r\n";
+			$buf[] = "Content-Type:".MIME_Type::getMIMEType($header['path']);
+			$buf[] = "Accept-Ranges: bytes\n";
 			$buf[] = file_get_contents(__DIR__.$header['path']);
 			$socket->outputbuf = implode("\r\n", $buf);
 			$socket->bufend=1;

@@ -31,7 +31,7 @@ class socketmanager {
 		// sleep(1);
 		// echo '链接读';
 // 		var_dump ( $this->sockets );
-		if (socket_select ( $readsock, $writesock, $exceptsock, 0, 50 ) == 0) {
+		if (socket_select ( $readsock, $writesock, $exceptsock, 2, 500 ) == 0) {
 			return true;
 		}
 		echo date ( "H:i:s" ) . "处理socket" . PHP_EOL;

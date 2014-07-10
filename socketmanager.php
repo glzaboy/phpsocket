@@ -29,8 +29,8 @@ class socketmanager {
 		
 		// echo date ( "H:i:s" ) . "选择" . PHP_EOL;
 		// sleep(1);
-		echo '链接读';
-		var_dump ( $this->sockets );
+// 		echo '链接读';
+// 		var_dump ( $this->sockets );
 		if (socket_select ( $readsock, $writesock, $exceptsock, 2, 500 ) == 0) {
 			return true;
 		}

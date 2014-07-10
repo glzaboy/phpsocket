@@ -26,22 +26,33 @@ class http {
 			return;
 		}
 		$header = $this->parseHeader ( $socket->readbuf ( 1 ) );
+		$header ['path'] = urldecode ( $header ['path'] );
 		if ($socket->bufend == 0) {
 			if (realpath ( DOOT_ROOT . $header ['path'] )) {
 				if (is_dir ( DOOT_ROOT . $header ['path'] )) {
-					echo "DIR".DOOT_ROOT . $header ['path'].PHP_EOL;
-					$content = "";
+					echo "DIR" . DOOT_ROOT . $header ['path'] . PHP_EOL;
+					$content = "<table>";
 					$dir = dir ( DOOT_ROOT . $header ['path'] );
 					while ( ($dirname = $dir->read ()) !== false ) {
-						$content .= $dirname;
+						if (in_array ( $dirname, array (
+								'.' 
+						) )) {
+							continue;
+						}
+						if (is_dir ( DOOT_ROOT . $header ['path'] . '/' . $dirname )) {
+							$content .= "<tr><td><a href=\"" . urlencode ( $dirname ) . "/\">{$dirname}</a></td></tr>";
+						} else {
+							$content .= "<tr><td><a href=\"" . urlencode ( $dirname ) . "\">{$dirname}</a></td></tr>";
+						}
 					}
+					$content .= "</table>";
 					$dir->close ();
 					$header = self::buildHeader ( HTTPCODE::STATUS_200, strlen ( $content ), "text/html" );
 					$header [] = $content;
 					$socket->outputbuf = implode ( "\n", $header );
 					$socket->bufend = 1;
 				} else {
-					echo "FILE".DOOT_ROOT . $header ['path'].PHP_EOL;
+					echo "FILE" . DOOT_ROOT . $header ['path'] . PHP_EOL;
 					$content = file_get_contents ( DOOT_ROOT . $header ['path'] );
 					if ($content) {
 						$header = self::buildHeader ( HTTPCODE::STATUS_200, filesize ( DOOT_ROOT . $header ['path'] ), MIME_Type::getMIMEType ( $header ['path'] ) );
@@ -54,6 +65,7 @@ class http {
 					$socket->bufend = 1;
 				}
 			} else {
+				echo "NOT FOUND" . DOOT_ROOT . $header ['path'] . PHP_EOL;
 				$content = HTTPCODE::STATUS_404;
 				$header = self::buildHeader ( HTTPCODE::STATUS_404, strlen ( $content ), "text/html" );
 				$header [] = $content;

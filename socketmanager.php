@@ -13,6 +13,7 @@ class socketmanager {
 	private $resource = array ();
 	private $filehandle = array ();
 	private $handle = null;
+	private $request = array ();
 	public function __construct($port = '10080', $ip = '0.0.0.0', $obj) {
 		$socket = socket::createSocket ( $port, $ip );
 		$this->listensocket = $socket->socket;
@@ -30,12 +31,12 @@ class socketmanager {
 		
 		// echo date ( "H:i:s" ) . "选择" . PHP_EOL;
 		// sleep(1);
-// 		echo '链接读';
+		// echo '链接读';
 // 		var_dump ( $this->sockets );
 		if (socket_select ( $readsock, $writesock, $exceptsock, 2, 500 ) == 0) {
 			return true;
 		}
-// 		echo date ( "H:i:s" ) . "处理socket" . PHP_EOL;
+		// echo date ( "H:i:s" ) . "处理socket" . PHP_EOL;
 		// echo '链接读';
 		// var_dump ( $readsock );
 		// echo '链接写';
@@ -69,7 +70,7 @@ class socketmanager {
 		// sleep(1);
 		foreach ( $readsock as $sock ) {
 			$key = array_search ( $sock, $this->sockets );
-			$socket = socket::restore ( $this->resource [$key], $sock ,$this->filehandle[$key]);
+			$socket = socket::restore ( $this->resource [$key], $sock, $this->filehandle [$key] );
 			if ($socket->recvbuf () === false) {
 				echo date ( "H:i:s" ) . "Free read socket" . $key . PHP_EOL;
 				$key = array_search ( $sock, $readsock );
@@ -84,7 +85,8 @@ class socketmanager {
 		// sleep(1);
 		foreach ( $writesock as $sock ) {
 			$key = array_search ( $sock, $this->sockets );
-			$socket = socket::restore ( $this->resource [$key], $sock ,$this->filehandle[$key]);
+			$socket = socket::restore ( $this->resource [$key], $sock, $this->filehandle [$key], $this->request [$key] );
+// 			var_dump($socket->request);
 			$this->triggerwrite ( $socket );
 			if ($socket->sentbuf () === false) {
 				echo date ( "H:i:s" ) . "Free write socket" . $key . PHP_EOL;
@@ -93,6 +95,7 @@ class socketmanager {
 				$socket->close ();
 				unset ( $readsock [$key], $writesock [$key] );
 			} else {
+// 				echo "更新socket缓存".PHP_EOL;
 				$this->addclient ( $socket );
 			}
 		}
@@ -110,6 +113,7 @@ class socketmanager {
 		}
 		$this->resource [$key] = serialize ( $socket );
 		$this->filehandle [$key] = $socket->filehandle;
+		$this->request [$key] = $socket->request;
 		return $key;
 	}
 	/**
@@ -117,9 +121,9 @@ class socketmanager {
 	 * @param socket $socket        	
 	 */
 	public function removeclient(&$socket) {
-		$this->triggerclose($socket);
+		$this->triggerclose ( $socket );
 		$key = array_search ( $socket->socket, $this->sockets );
-		unset ( $this->sockets [$key], $this->resource [$key], $this->filehandle [$key] );
+		unset ( $this->sockets [$key], $this->resource [$key], $this->filehandle [$key], $this->request [$key] );
 	}
 	public function triggerread(&$socket) {
 		if ($this->handle) {

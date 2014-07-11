@@ -8,6 +8,11 @@ class socket {
 	public $outputbuf = '';
 	public $sockettype = 0;
 	public $filehandle = null;
+	/**
+	 *
+	 * @var Request
+	 */
+	public $request = null;
 	public $bufend = 0;
 	/**
 	 * 创建socket
@@ -70,11 +75,14 @@ class socket {
 	 * @param unknown $data        	
 	 * @return socket
 	 */
-	static public function restore($serializedata, $socket,$filehandle=null) {
+	static public function restore($serializedata, $socket, $filehandle = null, $request = null) {
 		$mysocket = unserialize ( $serializedata );
 		$mysocket->socket = $socket;
-		if(is_array($filehandle)){
-			$mysocket->filehandle=$filehandle;
+		if (is_array ( $filehandle )) {
+			$mysocket->filehandle = $filehandle;
+		}
+		if (is_object ( $request )) {
+			$mysocket->request = $request;
 		}
 		return $mysocket;
 	}
@@ -95,11 +103,11 @@ class socket {
 				}
 			} elseif ($len == 0) {
 				return false;
-			} elseif($len>0) {
-				$this->outputbuf = substr ( $this->outputbuf, $len  );
+			} elseif ($len > 0) {
+				$this->outputbuf = substr ( $this->outputbuf, $len );
 				return true;
 			}
-		}else{
+		} else {
 			return true;
 		}
 	}

@@ -7,6 +7,7 @@ class socket {
 	public $inputbuf = '';
 	public $outputbuf = '';
 	public $sockettype = 0;
+	public $filehandle = null;
 	public $bufend = 0;
 	/**
 	 * 创建socket
@@ -69,9 +70,12 @@ class socket {
 	 * @param unknown $data        	
 	 * @return socket
 	 */
-	static public function restore($serializedata, $socket) {
+	static public function restore($serializedata, $socket,$filehandle=null) {
 		$mysocket = unserialize ( $serializedata );
 		$mysocket->socket = $socket;
+		if(is_array($filehandle)){
+			$mysocket->filehandle=$filehandle;
+		}
 		return $mysocket;
 	}
 	/**
@@ -83,7 +87,7 @@ class socket {
 	public function sentbuf() {
 		if ($this->sockettype == self::SOCK_TYPE_DATA) {
 			$datalen = strlen ( $this->outputbuf );
-			$len = socket_send ( $this->socket, $this->outputbuf, 40960, 0 );
+			$len = socket_send ( $this->socket, $this->outputbuf, 2048000, 0 );
 			if ($len == $datalen) {
 				$this->outputbuf = '';
 				if ($this->bufend == 1) {

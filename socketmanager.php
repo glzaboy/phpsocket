@@ -4,7 +4,7 @@
  * @author guliuzhong
  *
  */
-if (! class_exists ( 'socket', flase )) {
+if (! class_exists ( 'socket', false )) {
 	include 'socket.php';
 }
 class socketmanager {

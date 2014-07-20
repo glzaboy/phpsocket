@@ -21,10 +21,13 @@ class Request {
 				$this->method = $match [1];
 				$urlinfo = parse_url ( trim ( preg_replace ( '/HTTP\/1\.[01]/', '', preg_replace ( "/^(get|head|put|post)/i", '', $val ) ) ) );
 				$this->path = $urlinfo ['path'];
-				$this->query_string = $urlinfo ['query'];
-				if (parse_str ( $urlinfo ['query'], $this->query_get )) {
-					$this->query_get = null;
+				$this->query_string = isset ( $urlinfo ['query'] ) ? $urlinfo ['query'] : '';
+				if ($this->query_string) {
+					parse_str ( $this->query_string, $this->query_get );
 				}
+				continue;
+			}
+			if (! trim ( $val )) {
 				continue;
 			}
 			list ( $key, $value ) = explode ( ':', trim ( $val ) );
@@ -36,7 +39,6 @@ class Request {
 				}
 				continue;
 			}
-			list ( $key, $value ) = explode ( ':', trim ( $val ) );
 			if ($key) {
 				$this->$key = $value;
 			}
@@ -76,7 +78,7 @@ class http {
 			}
 			if (! $socket->request) {
 				$header = $socket->readbuf ( 1 );
-				echo "接收header头：",$header . PHP_EOL;
+				echo "接收header头：", $header . PHP_EOL;
 				$request = new Request ( $header );
 				$request->path = urldecode ( $request->path );
 				$socket->request = $request;
@@ -144,7 +146,7 @@ class http {
 						} else {
 							$header = self::buildHeader ( HTTPCODE::STATUS_200, $filelen, MIME_Type::getMIMEType ( $socket->request->path ), null );
 						}
-						echo "回应header：".implode("\r\n", $header);
+						echo "回应header：" . implode ( "\r\n", $header );
 						$socket->outputbuf = implode ( "\r\n", $header );
 					}
 				}
@@ -158,7 +160,7 @@ class http {
 					$maxlen = min ( $rangelen, $maxlen );
 					$data = fread ( $socket->filehandle ['data'], $maxlen );
 					$readlen = strlen ( $data );
-					echo "Range读从".$socket->request->rangeoffset,"到",$socket->request->rangeoffset + $readlen,"共计{$readlen}字节。" . PHP_EOL;
+					echo "Range读从" . $socket->request->rangeoffset, "到", $socket->request->rangeoffset + $readlen, "共计{$readlen}字节。" . PHP_EOL;
 					$socket->request->rangeoffset += strlen ( $data );
 				} else {
 					echo "直接读" . PHP_EOL;

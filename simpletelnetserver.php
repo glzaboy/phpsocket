@@ -36,7 +36,7 @@ while ( TRUE ) {
 	$wsdata = $sockdata;
 	$esdata = $sockdata;
 	
-	if (socket_select ( $rsdata, $wsdata, $esdata, 0 ) === false) {
+	if (socket_select ( $rsdata, $wsdata, $esdata, 500 ) === false) {
 		continue;
 	}
 	echo '读:' . var_dump ( $rsdata );
@@ -70,14 +70,14 @@ while ( TRUE ) {
 			}
 			$data = trim ( $data );
 			if (strtolower ( $data ) == 'exit') {
-				socket_write ( $sock, "BYE" );
+				socket_write ( $sock, "BYE\n" );
 				$key = array_search ( $sock, $sockdata );
 				unset ( $sockdata [$key] );
 				socket_close ( $sock );
 				continue;
 			}
 			if ($data) {
-				socket_write ( $sock, date ( "H:i:s" ) . $data );
+				socket_write ( $sock, date ( "H:i:s" ) . $data ."\n please input next command:");
 			}
 		}
 	}

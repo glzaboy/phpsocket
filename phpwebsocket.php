@@ -4,6 +4,20 @@ date_default_timezone_set ( "Asia/Chongqing" );
 include 'socketmanager.php';
 include 'mime.php';
 class http {
+    /**
+     *
+     * @param socket $socket
+     */
+    function close($socket) {
+        if (count ( $socket->filehandle )) {
+            echo "关闭读写文件";
+            foreach ( $socket->filehandle as $key => $handle ) {
+                echo "句柄名:" . $key . PHP_EOL;
+                fclose ( $handle );
+                unset ( $socket->filehandle [$key] );
+            }
+        }
+    }
 	/**
 	 *
 	 * @param socket $socket        	
@@ -44,11 +58,15 @@ class http {
 				$header['path']=trim(preg_replace('/HTTP\/1\.[01]/', '', preg_replace("/^(HEAD|GET) /", '', $val)));
 				continue;
 			}
-			list($key,$value)=explode(':', trim($val));
-			if($key){
-				$header[$key]=$value;
-			}
+			if(trim($val)){
+                list($key,$value)=explode(':', trim($val));
+                if($key){
+                    $header[$key]=$value;
+                }
+            }
+//            echo $val;
 		}
+		var_dump($header);
 		return $header;
 	}
 }

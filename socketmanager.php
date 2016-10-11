@@ -20,7 +20,7 @@ class socketmanager {
 		$this->addclient ( $socket );
 		$this->handle = $obj;
 	}
-	public function select() {
+	public function  select() {
 		$readsock = $this->sockets;
 		$writesock = $this->sockets;
 		$key = array_search ( $this->listensocket, $writesock );

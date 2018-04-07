@@ -1,6 +1,11 @@
 #!/usr/bin/env php
 <?php
-define ( "DOOT_ROOT", __DIR__ . "/webroot" );
+if($argv[1]){
+  define ("DOOT_ROOT",realpath($argv[1]));
+}else{
+  define ( "DOOT_ROOT", __DIR__ . "/webroot" );
+}
+echo "Doc Root ".DOOT_ROOT;
 date_default_timezone_set ( "Asia/Chongqing" );
 include 'socketmanager.php';
 include 'mime.php';

@@ -225,7 +225,8 @@ class MIME_Type {
 			'avi' => 'video/x-msvideo',
 			'ogv' => 'video/ogg',
 			'movie' => 'video/x-sgi-movie',
-			'ice' => 'x-conference/x-cooltalk' 
+			'ice' => 'x-conference/x-cooltalk',
+			'json' => 'application/json' 
 	);
 	
 	/**
